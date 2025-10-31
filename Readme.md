@@ -9,7 +9,7 @@ It opens multiple projects, editors, and terminals — each running their own co
 
 🧠 Each workspace can have multiple entries (like frontend, backend, etc.)
 
-🖥️ Opens real system terminals — fully interactive (CTRL + C, history, etc.)
+🖥️ Opens real system terminals — (CTRL + C kill the terminal)
 
 🧰 Supports editors like VSCode, Cursor, Vim, and Neovim
 
