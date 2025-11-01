@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { spawn, execSync } from "child_process";
+import os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,12 +38,10 @@ export async function startWorkspace(workspaceName) {
 
     console.log(`📁 Setting up: ${entryPath}`);
 
-    // Open editor
     if (entry.openInEditor && config.editor !== "none") {
       openInEditor(entryPath, config.editor);
     }
 
-    // Launch commands
     if (entry.commands && entry.commands.length > 0) {
       openSystemTerminal(entryPath, entry.commands);
     }
@@ -53,7 +52,7 @@ export async function startWorkspace(workspaceName) {
   console.log("🎉 All entries launched successfully!\n");
 }
 
-// 🧠 Open the path in the configured editor
+// 🧠 Open folder in chosen editor
 function openInEditor(entryPath, editor) {
   const editorMap = {
     vscode: "code",
@@ -66,13 +65,10 @@ function openInEditor(entryPath, editor) {
   if (!editorCmd) return;
 
   console.log(`📝 Opening ${entryPath} in ${editor}...`);
-  spawn(editorCmd, [entryPath], {
-    stdio: "ignore",
-    detached: true,
-  }).unref();
+  spawn(editorCmd, [entryPath], { stdio: "ignore", detached: true }).unref();
 }
 
-// 🔍 Find which terminal is available
+// 🔍 Detect available terminal
 function getAvailableTerminal() {
   if (isWindows) {
     try {
@@ -86,61 +82,64 @@ function getAvailableTerminal() {
     return "cmd";
   }
 
-  const terminals = [
-    "konsole",
-    "gnome-terminal",
-    "tilix",
-    "alacritty",
-    "kitty",
-    "xterm",
-  ];
-
+  const terminals = ["konsole", "gnome-terminal", "tilix", "alacritty", "kitty", "xterm"];
   for (const term of terminals) {
     try {
       execSync(`command -v ${term}`, { stdio: "ignore" });
       return term;
     } catch {}
   }
-
   return null;
 }
 
-// 💡 Open a fully working native terminal for the entry
+// 💡 Open a terminal window per entry
 function openSystemTerminal(entryPath, commands) {
   const terminal = getAvailableTerminal();
-  const fullCommand = commands.join(" && ");
+  const platform = os.platform();
 
-  if (isWindows) {
-    const safeCmd = `cd "${entryPath}" && echo 📂 Working directory: ${entryPath} && ${fullCommand}`;
-    let cmd;
-
-    switch (terminal) {
-      case "wt":
-        cmd = `wt.exe new-tab powershell -NoExit -Command "${safeCmd}"`;
-        break;
-      case "powershell":
-        cmd = `start powershell -NoExit -Command "${safeCmd}"`;
-        break;
-      default:
-        cmd = `start cmd /k "${safeCmd}"`;
-        break;
-    }
+  if (platform === "win32") {
+    const isPowerShell = terminal === "powershell";
+    const cmdChain = commands.join(isPowerShell ? "; " : " && ");
 
     console.log(`▶️ Opening ${terminal} → ${entryPath}`);
-    console.log(`💬 Command: ${fullCommand}\n`);
+    console.log(`💬 Command: ${cmdChain}\n`);
+
     try {
-      execSync(cmd, { stdio: "ignore" });
+      if (terminal === "wt") {
+        // Windows Terminal
+        const psCmd = `Set-Location '${entryPath}'; Write-Host '📂 Working directory: ${entryPath}'; ${cmdChain}`;
+        spawn("wt.exe", ["new-tab", "powershell", "-NoExit", "-Command", psCmd], {
+          detached: true,
+          stdio: "ignore",
+        }).unref();
+      } else if (isPowerShell) {
+        // PowerShell
+        const psCmd = `Set-Location '${entryPath}'; Write-Host '📂 Working directory: ${entryPath}'; ${cmdChain}`;
+        spawn("powershell.exe", ["-NoExit", "-Command", psCmd], {
+          detached: true,
+          stdio: "ignore",
+        }).unref();
+      } else {
+        // Fallback: CMD
+        const cmd = `cd /d "${entryPath}" && echo 📂 Working directory: ${entryPath} && ${cmdChain}`;
+        spawn("cmd.exe", ["/c", "start", "cmd.exe", "/k", cmd], {
+          detached: true,
+          stdio: "ignore",
+        }).unref();
+      }
     } catch (err) {
       console.error(`❌ Failed to launch ${terminal}:`, err.message);
     }
+
     return;
   }
 
-  // Linux/macOS logic
+  // 🐧 Linux / 🍎 macOS
   const shell = process.env.SHELL || "bash";
+  const fullCommand = commands.join(" && ");
   const safeCmd = `cd "${entryPath}" && echo "📂 Working directory: ${entryPath}" && ${fullCommand}; exec ${shell}`;
 
-  const terminalArgs =
+  const args =
     {
       konsole: ["-e", shell, "-ic", safeCmd],
       "gnome-terminal": ["--", shell, "-ic", safeCmd],
@@ -153,15 +152,7 @@ function openSystemTerminal(entryPath, commands) {
   console.log(`▶️ Opening ${terminal} → ${entryPath}`);
   console.log(`💬 Command: ${fullCommand}\n`);
 
-  const proc = spawn(terminal, terminalArgs, {
-    cwd: entryPath,
-    stdio: "ignore",
-    detached: true,
-  });
-
-  proc.on("error", (err) => {
-    console.error(`❌ Failed to launch ${terminal}:`, err.message);
-  });
-
+  const proc = spawn(terminal, args, { cwd: entryPath, stdio: "ignore", detached: true });
+  proc.on("error", (err) => console.error(`❌ Failed to launch ${terminal}:`, err.message));
   proc.unref();
 }
