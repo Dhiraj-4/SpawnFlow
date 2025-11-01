@@ -38,10 +38,12 @@ export async function startWorkspace(workspaceName) {
 
     console.log(`📁 Setting up: ${entryPath}`);
 
+    // Open in configured editor
     if (entry.openInEditor && config.editor !== "none") {
       openInEditor(entryPath, config.editor);
     }
 
+    // Run workspace commands
     if (entry.commands && entry.commands.length > 0) {
       openSystemTerminal(entryPath, entry.commands);
     }
@@ -65,7 +67,11 @@ function openInEditor(entryPath, editor) {
   if (!editorCmd) return;
 
   console.log(`📝 Opening ${entryPath} in ${editor}...`);
-  spawn(editorCmd, [entryPath], { stdio: "ignore", detached: true }).unref();
+  try {
+    spawn(editorCmd, [entryPath], { stdio: "ignore", detached: true }).unref();
+  } catch (err) {
+    console.error(`❌ Failed to open editor: ${err.message}`);
+  }
 }
 
 // 🔍 Detect available terminal
@@ -98,30 +104,32 @@ function openSystemTerminal(entryPath, commands) {
   const platform = os.platform();
 
   if (platform === "win32") {
+    const cwd = path.resolve(entryPath);
     const isPowerShell = terminal === "powershell";
-    const cmdChain = commands.join(isPowerShell ? "; " : " && ");
+    const cmdChain = commands.map((cmd) => cmd.trim().replace(/^"|"$/g, "")).join("; ");
 
-    console.log(`▶️ Opening ${terminal} → ${entryPath}`);
+    console.log(`▶️ Opening ${terminal} → ${cwd}`);
     console.log(`💬 Command: ${cmdChain}\n`);
 
     try {
       if (terminal === "wt") {
-        // Windows Terminal
-        const psCmd = `Set-Location '${entryPath}'; Write-Host '📂 Working directory: ${entryPath}'; ${cmdChain}`;
-        spawn("wt.exe", ["new-tab", "powershell", "-NoExit", "-Command", psCmd], {
+        // ✅ Use Windows Terminal tab with PowerShell
+        const psCmd = `Set-Location '${cwd}'; Write-Host '📂 Working directory: ${cwd}'; ${cmdChain}`;
+        spawn("wt.exe", ["-w", "0", "nt", "-d", cwd, "powershell", "-NoExit", "-Command", psCmd], {
           detached: true,
           stdio: "ignore",
         }).unref();
       } else if (isPowerShell) {
-        // PowerShell
-        const psCmd = `Set-Location '${entryPath}'; Write-Host '📂 Working directory: ${entryPath}'; ${cmdChain}`;
+        // ✅ PowerShell standalone
+        const psCmd = `Set-Location '${cwd}'; Write-Host '📂 Working directory: ${cwd}'; ${cmdChain}`;
         spawn("powershell.exe", ["-NoExit", "-Command", psCmd], {
+          cwd,
           detached: true,
           stdio: "ignore",
         }).unref();
       } else {
-        // Fallback: CMD
-        const cmd = `cd /d "${entryPath}" && echo 📂 Working directory: ${entryPath} && ${cmdChain}`;
+        // ✅ Fallback to CMD
+        const cmd = `cd /d "${cwd}" && echo 📂 Working directory: ${cwd} && ${cmdChain}`;
         spawn("cmd.exe", ["/c", "start", "cmd.exe", "/k", cmd], {
           detached: true,
           stdio: "ignore",
