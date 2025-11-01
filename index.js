@@ -11,7 +11,7 @@ const program = new Command();
 program
   .name("spawnflow")
   .description("A CLI tool to manage and launch spawnflow workspaces")
-  .version("1.0.4");
+  .version("1.0.5");
 
 // ✅ create command
 program

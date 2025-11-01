@@ -72,7 +72,7 @@ export async function createWorkspace(workspaceName) {
         {
           type: "input",
           name: "path",
-          message: "Entry complete path (e.g., /home/user/Desktop/frontend):"
+          message: "Enter complete entry path \n (e.g., linux: /home/user/Desktop/frontend) or windows: C:\\Users\\User\\Desktop\\frontend \n:"
         },
         {
           type: "confirm",
@@ -83,7 +83,7 @@ export async function createWorkspace(workspaceName) {
         {
           type: "input",
           name: "commands",
-          message: "Commands (comma-separated, in order to execution):",
+          message: "Commands (comma-separated, in order of execution):",
           default: "npm run dev",
         }
       ]);
@@ -108,12 +108,42 @@ export async function createWorkspace(workspaceName) {
       addEntry = more;
     }
 
+    const apps = [];
+    let addApp = true;
+
+    while (addApp) {
+      const appAnswers = await inquirer.prompt([
+        {
+          type: "input",
+          name: "name",
+          message: "Enter app's cmd \n(e.g., chrome's cmd: google-chrome-stable , obsidian's cmd: obsidian):"
+        },
+        {
+          type: "input",
+          name: "url",
+          message: "Enter app url/path (e.g., https://localhost:5173 or /home/usr/desktop/project/file.txt):"
+        }
+      ]);
+      apps.push(appAnswers);
+      const { more } = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "more",
+          message: "Add another app?",
+          default: false,
+        },
+      ]);
+
+      addApp = more;
+    }
+
     // 7️⃣ Build final config
     const finalConfig = {
       name: baseAnswers.name,
       editor: baseAnswers.editor,
       browser: baseAnswers.browser,
       entries,
+      apps
     };
 
     const configPath = path.join(workspacePath, "config.json");

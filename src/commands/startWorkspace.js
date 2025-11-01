@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { spawn, execSync } from "child_process";
 import os from "os";
-import open from "open"; // 👈 Added
+import open from "open";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,6 +29,7 @@ export async function startWorkspace(workspaceName) {
 
   console.log(`\n🚀 Starting workspace: ${config.name}\n`);
 
+  // 🧱 1️⃣ Launch all workspace entries
   for (const entry of config.entries) {
     const entryPath = entry.path;
 
@@ -39,12 +40,12 @@ export async function startWorkspace(workspaceName) {
 
     console.log(`📁 Setting up: ${entryPath}`);
 
-    // Open in configured editor (using open)
+    // Open in configured editor
     if (entry.openInEditor && config.editor !== "none") {
       await openInEditor(entryPath, config.editor);
     }
 
-    // Run workspace commands
+    // Run commands inside terminal
     if (entry.commands && entry.commands.length > 0) {
       openSystemTerminal(entryPath, entry.commands);
     }
@@ -52,10 +53,18 @@ export async function startWorkspace(workspaceName) {
     console.log(`✅ Entry launched: ${entry.path}\n`);
   }
 
-  console.log("🎉 All entries launched successfully!\n");
+  // 🌐 2️⃣ Launch all configured apps
+  if (config.apps && config.apps.length > 0) {
+    console.log("🧩 Launching additional apps...\n");
+    for (const app of config.apps) {
+      await launchApp(app);
+    }
+  }
+
+  console.log("🎉 All entries and apps launched successfully!\n");
 }
 
-// 🧠 Open folder in chosen editor using `open`
+// 📝 Open folder in chosen editor
 async function openInEditor(entryPath, editor) {
   const editorMap = {
     vscode: "code",
@@ -71,11 +80,11 @@ async function openInEditor(entryPath, editor) {
   try {
     await open(entryPath, { app: { name: appName } });
   } catch (err) {
-    console.error(`❌ Failed to open editor with 'open': ${err.message}`);
+    console.error(`❌ Failed to open editor: ${err.message}`);
   }
 }
 
-// 🔍 Detect available terminal
+// ⚙️ Detect available terminal
 function getAvailableTerminal() {
   if (isWindows) {
     try {
@@ -99,7 +108,7 @@ function getAvailableTerminal() {
   return null;
 }
 
-// 💡 Open a terminal window per entry
+// 💻 Open terminal per entry
 function openSystemTerminal(entryPath, commands) {
   const platform = os.platform();
 
@@ -124,7 +133,7 @@ function openSystemTerminal(entryPath, commands) {
     return;
   }
 
-  // 🐧 Linux / 🍎 macOS (unchanged)
+  // 🐧 Linux / macOS
   const shell = process.env.SHELL || "bash";
   const fullCommand = commands.join(" && ");
   const safeCmd = `cd "${entryPath}" && echo "📂 Working directory: ${entryPath}" && ${fullCommand}; exec ${shell}`;
@@ -147,4 +156,29 @@ function openSystemTerminal(entryPath, commands) {
   });
   proc.on("error", (err) => console.error(`❌ Failed to launch ${terminal}:`, err.message));
   proc.unref();
+}
+
+// 🌍 Launch apps like "chrome http://localhost:5173" or "obsidian <path>"
+async function launchApp(app) {
+  if (!app.name) return;
+
+  const command = app.url ? `${app.name} ${app.url}` : app.name;
+  console.log(`🧭 Launching app: ${command}`);
+
+  try {
+    if (isWindows) {
+      spawn("cmd", ["/c", "start", "", app.name, app.url || ""], {
+        stdio: "ignore",
+        detached: true,
+      }).unref();
+    } else {
+      // Linux/macOS
+      spawn(app.name, app.url ? [app.url] : [], {
+        stdio: "ignore",
+        detached: true,
+      }).unref();
+    }
+  } catch (err) {
+    console.error(`❌ Failed to launch app "${app.name}": ${err.message}`);
+  }
 }

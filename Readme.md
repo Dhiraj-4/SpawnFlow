@@ -1,238 +1,280 @@
-# ⚡️ SpawnFlow CLI
+⚡️ SpawnFlow CLI
 
-**SpawnFlow** is a lightweight cross-platform workflow manager CLI that helps developers instantly launch entire development environments with a single command.  
-It opens multiple projects, editors, and terminals — each running their own commands — just like magic.
+SpawnFlow is a sleek, cross-platform workflow manager CLI that helps developers launch entire dev environments — terminals, editors, commands, and apps — all at once with a single command.
 
----
+No more opening folders and running scripts one by one. SpawnFlow does it all for you ⚙️💨
 
-## 🧩 Features
+___________________________________________________________________________________________
 
-- 🏗️ Create, list, start, and remove workspaces  
-- 🧠 Each workspace can have multiple entries (like `frontend`, `backend`, etc.)  
-- 🖥️ Opens real system terminals  
-- 🧰 Supports editors like VSCode, Cursor, Vim, and Neovim  
-- 🌐 Lets you pick your preferred browser (for future integrations)  
-- 💻 Works on **Windows**, **Linux**, and **macOS**  
-- 🪶 Built entirely in Node.js — no heavy dependencies  
+🚀 Features
 
----
+🏗 Workspace Management — Create, list, start, and remove workspaces
 
-## 📦 Installation
+🧩 Multi-entry Support — Manage multiple folders (frontend, backend, etc.) per workspace
 
-### Global (Recommended)
+💬 Command Runner — Launch real, persistent system terminals that run your dev commands
+
+🧰 Editor Integration — Works with VSCode, Cursor, Vim, Neovim, and more
+
+🌐 Browser & App Launching — Open links or files automatically (e.g., Chrome → localhost, Obsidian → notes)
+
+💻 Cross-Platform — Runs on Linux, Windows, and macOS
+
+🪶 Lightweight — 100% Node.js, no heavy dependencies
+
+___________________________________________________________________________________________
+
+📦 Installation
+Global (Recommended)
+
+⚠️ Always run with sudo (Linux/macOS) or Administrator privileges (Windows).
+
 ```bash
-npm install -g spawnflow
-Local Development
-bash
-Copy code
+sudo npm install -g spawnflow
+```
+
+Now you can use SpawnFlow anywhere:
+
+```bash
+spawnflow
+```
+
+___________________________________________________________________________________________
+
+🧑‍💻 Local Development
+
+```bash
 git clone https://github.com/Dhiraj-4/SpawnFlow.git
 cd spawnflow
 npm install
 sudo npm link
-Now the spawnflow command is available system-wide:
+```
+___________________________________________________________________________________________
 
-bash
-Copy code
-spawnflow
 ⚙️ Usage
+
 🧱 1. Create a Workspace
-bash
-Copy code
+
+```bash
 spawnflow create <workspace-name>
-This will:
+```
 
-Prompt for workspace details (editor, browser, etc.)
+You’ll be prompted to enter:
 
-Ask for each project’s path, whether to open it in an editor, and the commands to run
+Workspace name, editor, and browser
 
-Generate a configuration file at
-workspaces/<workspace-name>/config.json
+Paths for your projects
+
+Commands to run (e.g., npm run dev)
+
+Apps to launch (e.g., Chrome, Obsidian, etc.)
 
 Example:
 
-bash
-Copy code
+```yaml
 $ spawnflow create DevsCorner
 
 🚀 Creating new workspace: DevsCorner
 ✔ Choose your editor: vscode
 ✔ Choose your browser: chrome
-✔ Entry complete path: C:\Users\LENOVO\Desktop\DevsCorner\backend
+✔ Path: /home/dark/Desktop/DevsCorner/frontend
 ✔ Open in editor? Yes
 ✔ Commands: npm run dev
 ✔ Add another entry? Yes
-✔ Entry complete path: C:\Users\LENOVO\Desktop\DevsCorner\frontend
+✔ Path: /home/dark/Desktop/DevsCorner/backend
 ✔ Open in editor? Yes
 ✔ Commands: npm run dev
 ✔ Add another entry? No
+✔ App name: chrome
+✔ App url/path: http://localhost:5173
+✔ Add another app? Yes
+✔ App name: obsidian
+✔ App url/path:
+✔ Add another app? No
 
 ✅ Workspace created successfully!
+
+```
+___________________________________________________________________________________________
+
 📋 2. List All Workspaces
-bash
-Copy code
+
+```bash
 spawnflow list
-Example output:
+```
 
-less
-Copy code
+Example Output:
+
+```bash
 📂 Available Workspaces:
-
 - DevsCorner (editor: vscode, browser: chrome)
 - Portfolio (editor: cursor, browser: brave)
+```
+___________________________________________________________________________________________
+
 🚀 3. Start a Workspace
-bash
-Copy code
+
+```bash
 spawnflow start <workspace-name>
+```
+
 This will:
 
-Open each configured path in your chosen editor (using the open package)
+Open all configured paths in your chosen editor
 
-Launch all commands in separate, fully functional system terminals
+Launch each project’s commands in independent terminals
 
-Keep each terminal interactive and persistent
+Open configured apps or URLs (e.g., Chrome → localhost)
 
-Example output:
+Example:
 
-mathematica
-Copy code
+```arduino
 🚀 Starting workspace: DevsCorner
 
-📁 Setting up: C:\Users\LENOVO\Desktop\DevsCorner\backend
+📁 /home/dark/Desktop/DevsCorner/backend
 📝 Opening in vscode...
-▶️ Opening terminal → C:\Users\LENOVO\Desktop\DevsCorner\backend
-💬 Command: npm run dev
+💬 Running: npm run dev
 
-📁 Setting up: C:\Users\LENOVO\Desktop\DevsCorner\frontend
+📁 /home/dark/Desktop/DevsCorner/frontend
 📝 Opening in vscode...
-▶️ Opening terminal → C:\Users\LENOVO\Desktop\DevsCorner\frontend
-💬 Command: npm run dev
+💬 Running: npm run dev
 
-🎉 All entries launched successfully!
+🌐 Launching apps:
+→ chrome http://localhost:5173
+→ obsidian
+
+```
+___________________________________________________________________________________________
+
 ❌ 4. Remove a Workspace
-bash
-Copy code
+
+```bash
 spawnflow remove <workspace-name>
-Deletes the workspace directory and its config:
+```
 
-arduino
-Copy code
-🗑️ Workspace "DevsCorner" removed successfully.
+```arduino
+🗑️  Workspace "DevsCorner" removed successfully.
+```
+___________________________________________________________________________________________
+
 🧩 Workspace Structure
-Each workspace is stored in the workspaces/ directory.
 
-arduino
-Copy code
+Every workspace lives under the workspaces/ directory.
+
+```arduino
 workspaces/
 └── DevsCorner/
     └── config.json
-Example config.json:
+```
+Example config.json
 
-json
-Copy code
+```json
 {
   "name": "DevsCorner",
   "editor": "vscode",
   "browser": "chrome",
   "entries": [
     {
-      "path": "C:/Users/LENOVO/Desktop/DevsCorner/backend",
+      "path": "/home/dark/Desktop/DevsCorner/frontend",
       "openInEditor": true,
       "commands": ["npm run dev"]
     },
     {
-      "path": "C:/Users/LENOVO/Desktop/DevsCorner/frontend",
+      "path": "/home/dark/Desktop/DevsCorner/backend",
       "openInEditor": true,
       "commands": ["npm run dev"]
     }
+  ],
+  "apps": [
+    {
+      "name": "google-chrome-stable",
+      "url": "http://localhost:5173"
+    },
+    {
+      "name": "obsidian",
+      "url": ""
+    }
   ]
 }
+```
+___________________________________________________________________________________________
+
 🧠 Developer Notes
+
 Project Structure
-bash
-Copy code
+
+```pgsql
 spawnflow/
 ├── src/
 │   └── commands/
-│       ├── createWorkspace.js   # Interactive workspace creation
-│       ├── listWorkspaces.js    # Lists all saved workspaces
-│       ├── removeWorkspace.js   # Deletes a workspace
-│       └── startWorkspace.js    # Launches editors & terminals
+│       ├── createWorkspace.js
+│       ├── listWorkspaces.js
+│       ├── removeWorkspace.js
+│       └── startWorkspace.js
 │
-├── workspaces/                  # Auto-created on first workspace
+├── workspaces/
 │   └── <workspace-name>/config.json
 │
-├── index.js                     # CLI entry point
+├── index.js
 ├── package.json
 └── README.md
+```
+
 Supported Editors
-Editor	Launch Command
-vscode	code
-cursor	cursor
-vim	vim
-neovim	nvim
-none	(skips editor opening)
+
+| Editor | Command  |
+| ------ | -------- |
+| VSCode | `code`   |
+| Cursor | `cursor` |
+| Vim    | `vim`    |
+| Neovim | `nvim`   |
+| None   | —        |
+
 
 Supported Terminals
-Automatically detects one of the following:
 
-Windows Terminal (wt)
+Automatically detects and uses:
 
-PowerShell
+```objectivec
+Windows Terminal • PowerShell • CMD
+Konsole • GNOME Terminal • Tilix • Alacritty • Kitty • xterm
+```
+Each command runs in an isolated interactive shell:
 
-CMD
-
-konsole
-
-gnome-terminal
-
-tilix
-
-alacritty
-
-kitty
-
-xterm
-
-Each command runs in its own shell environment:
-
-bash
-Copy code
+```bash
 cd "<entryPath>" && <command> ; exec $SHELL
-🧑‍💻 Contributing
-We’d love your help improving SpawnFlow!
+```
+___________________________________________________________________________________________
 
-Fork the repository
+🤝 Contributing
 
-Clone your fork
+Pull requests are welcome!
 
-bash
-Copy code
+```bash
 git clone https://github.com/Dhiraj-4/SpawnFlow.git
 cd spawnflow
-Install dependencies
-
-bash
-Copy code
 npm install
-Create a new branch
-
-bash
-Copy code
 git checkout -b feature/<feature-name>
-Make your changes
+```
 
-Commit and push
-
-bash
-Copy code
+Make changes, then:
+```bash
 git add .
-git commit -m "Added new feature"
+git commit -m "Added <feature>"
 git push origin feature/<feature-name>
-Open a Pull Request on GitHub
+```
+
+Open a PR on GitHub 🚀
+___________________________________________________________________________________________
 
 🪪 License
-MIT License © 2025 [Dhiraj Londhe]
+
+MIT License © 2025 Dhiraj Londhe
+
+___________________________________________________________________________________________
 
 ❤️ Credits
-Built with 🧠 and 🤖 — by developer and AI, for developers —
+
+Built with 🧠 and 🤖 — by a developer, for developers —
 to make multi-project setups as effortless as running a single command.
+___________________________________________________________________________________________
