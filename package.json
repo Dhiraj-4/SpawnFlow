@@ -1,6 +1,6 @@
 {
   "name": "spawnflow",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "commander": "^14.0.2",
-    "inquirer": "^12.10.0"
+    "inquirer": "^12.10.0",
+    "open": "^10.2.0"
   }
 }

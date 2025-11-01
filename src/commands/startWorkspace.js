@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { spawn, execSync } from "child_process";
 import os from "os";
+import open from "open"; // 👈 Added
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -38,9 +39,9 @@ export async function startWorkspace(workspaceName) {
 
     console.log(`📁 Setting up: ${entryPath}`);
 
-    // Open in configured editor
+    // Open in configured editor (using open)
     if (entry.openInEditor && config.editor !== "none") {
-      openInEditor(entryPath, config.editor);
+      await openInEditor(entryPath, config.editor);
     }
 
     // Run workspace commands
@@ -54,8 +55,8 @@ export async function startWorkspace(workspaceName) {
   console.log("🎉 All entries launched successfully!\n");
 }
 
-// 🧠 Open folder in chosen editor
-function openInEditor(entryPath, editor) {
+// 🧠 Open folder in chosen editor using `open`
+async function openInEditor(entryPath, editor) {
   const editorMap = {
     vscode: "code",
     cursor: "cursor",
@@ -63,14 +64,14 @@ function openInEditor(entryPath, editor) {
     neovim: "nvim",
   };
 
-  const editorCmd = editorMap[editor];
-  if (!editorCmd) return;
+  const appName = editorMap[editor];
+  if (!appName) return;
 
   console.log(`📝 Opening ${entryPath} in ${editor}...`);
   try {
-    spawn(editorCmd, [entryPath], { stdio: "ignore", detached: true }).unref();
+    await open(entryPath, { app: { name: appName } });
   } catch (err) {
-    console.error(`❌ Failed to open editor: ${err.message}`);
+    console.error(`❌ Failed to open editor with 'open': ${err.message}`);
   }
 }
 
@@ -100,53 +101,35 @@ function getAvailableTerminal() {
 
 // 💡 Open a terminal window per entry
 function openSystemTerminal(entryPath, commands) {
-  const terminal = getAvailableTerminal();
   const platform = os.platform();
 
   if (platform === "win32") {
     const cwd = path.resolve(entryPath);
-    const isPowerShell = terminal === "powershell";
-    const cmdChain = commands.map((cmd) => cmd.trim().replace(/^"|"$/g, "")).join("; ");
-
-    console.log(`▶️ Opening ${terminal} → ${cwd}`);
+    const cmdChain = commands.map((cmd) => cmd.trim()).join(" && ");
+    console.log(`▶️ Opening terminal → ${cwd}`);
     console.log(`💬 Command: ${cmdChain}\n`);
 
     try {
-      if (terminal === "wt") {
-        // ✅ Use Windows Terminal tab with PowerShell
-        const psCmd = `Set-Location '${cwd}'; Write-Host '📂 Working directory: ${cwd}'; ${cmdChain}`;
-        spawn("wt.exe", ["-w", "0", "nt", "-d", cwd, "powershell", "-NoExit", "-Command", psCmd], {
-          detached: true,
-          stdio: "ignore",
-        }).unref();
-      } else if (isPowerShell) {
-        // ✅ PowerShell standalone
-        const psCmd = `Set-Location '${cwd}'; Write-Host '📂 Working directory: ${cwd}'; ${cmdChain}`;
-        spawn("powershell.exe", ["-NoExit", "-Command", psCmd], {
-          cwd,
-          detached: true,
-          stdio: "ignore",
-        }).unref();
-      } else {
-        // ✅ Fallback to CMD
-        const cmd = `cd /d "${cwd}" && echo 📂 Working directory: ${cwd} && ${cmdChain}`;
-        spawn("cmd.exe", ["/c", "start", "cmd.exe", "/k", cmd], {
-          detached: true,
-          stdio: "ignore",
-        }).unref();
-      }
+      const psCmd = `Start-Process powershell -ArgumentList '-NoExit','-Command','cd "${cwd}"; Write-Host "📂 Working directory: ${cwd}"; ${cmdChain}'`;
+      spawn("powershell.exe", ["-NoExit", "-Command", psCmd], {
+        cwd,
+        stdio: "ignore",
+        shell: true,
+        detached: true,
+      }).unref();
     } catch (err) {
-      console.error(`❌ Failed to launch ${terminal}:`, err.message);
+      console.error(`❌ Failed to launch PowerShell: ${err.message}`);
     }
 
     return;
   }
 
-  // 🐧 Linux / 🍎 macOS
+  // 🐧 Linux / 🍎 macOS (unchanged)
   const shell = process.env.SHELL || "bash";
   const fullCommand = commands.join(" && ");
   const safeCmd = `cd "${entryPath}" && echo "📂 Working directory: ${entryPath}" && ${fullCommand}; exec ${shell}`;
 
+  const terminal = getAvailableTerminal();
   const args =
     {
       konsole: ["-e", shell, "-ic", safeCmd],
@@ -157,10 +140,11 @@ function openSystemTerminal(entryPath, commands) {
       xterm: ["-e", shell, "-ic", safeCmd],
     }[terminal] || ["-e", shell, "-ic", safeCmd];
 
-  console.log(`▶️ Opening ${terminal} → ${entryPath}`);
-  console.log(`💬 Command: ${fullCommand}\n`);
-
-  const proc = spawn(terminal, args, { cwd: entryPath, stdio: "ignore", detached: true });
+  const proc = spawn(terminal, args, {
+    cwd: entryPath,
+    stdio: "ignore",
+    detached: true,
+  });
   proc.on("error", (err) => console.error(`❌ Failed to launch ${terminal}:`, err.message));
   proc.unref();
 }
