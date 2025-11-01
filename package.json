@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "commander": "^14.0.2",
-    "inquirer": "^12.10.0",
-    "node-pty": "^1.0.0"
+    "inquirer": "^12.10.0"
   }
 }

@@ -6,6 +6,7 @@ import { spawn, execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const isWindows = process.platform === "win32";
 
 export async function startWorkspace(workspaceName) {
   const workspaceDir = path.join(__dirname, `../../workspaces/${workspaceName}`);
@@ -73,6 +74,18 @@ function openInEditor(entryPath, editor) {
 
 // 🔍 Find which terminal is available
 function getAvailableTerminal() {
+  if (isWindows) {
+    try {
+      execSync("where wt.exe", { stdio: "ignore" });
+      return "wt";
+    } catch {}
+    try {
+      execSync("where powershell.exe", { stdio: "ignore" });
+      return "powershell";
+    } catch {}
+    return "cmd";
+  }
+
   const terminals = [
     "konsole",
     "gnome-terminal",
@@ -95,52 +108,52 @@ function getAvailableTerminal() {
 // 💡 Open a fully working native terminal for the entry
 function openSystemTerminal(entryPath, commands) {
   const terminal = getAvailableTerminal();
-  const shell = process.env.SHELL || "bash";
+  const fullCommand = commands.join(" && ");
 
-  if (!terminal) {
-    console.log(`⚠️ No supported terminal emulator found.`);
+  if (isWindows) {
+    const safeCmd = `cd "${entryPath}" && echo 📂 Working directory: ${entryPath} && ${fullCommand}`;
+    let cmd;
+
+    switch (terminal) {
+      case "wt":
+        cmd = `wt.exe new-tab powershell -NoExit -Command "${safeCmd}"`;
+        break;
+      case "powershell":
+        cmd = `start powershell -NoExit -Command "${safeCmd}"`;
+        break;
+      default:
+        cmd = `start cmd /k "${safeCmd}"`;
+        break;
+    }
+
+    console.log(`▶️ Opening ${terminal} → ${entryPath}`);
+    console.log(`💬 Command: ${fullCommand}\n`);
+    try {
+      execSync(cmd, { stdio: "ignore" });
+    } catch (err) {
+      console.error(`❌ Failed to launch ${terminal}:`, err.message);
+    }
     return;
   }
 
-  const fullCommand = commands.join(" && ");
+  // Linux/macOS logic
+  const shell = process.env.SHELL || "bash";
   const safeCmd = `cd "${entryPath}" && echo "📂 Working directory: ${entryPath}" && ${fullCommand}; exec ${shell}`;
 
-  let args;
-
-  switch (terminal) {
-    case "konsole":
-      args = ["-e", `${shell}`, "-ic", safeCmd];
-      break;
-
-    case "gnome-terminal":
-      args = ["--", shell, "-ic", safeCmd];
-      break;
-
-    case "tilix":
-      args = ["-e", `${shell}`, "-ic", safeCmd];
-      break;
-
-    case "alacritty":
-      args = ["-e", shell, "-ic", safeCmd];
-      break;
-
-    case "kitty":
-      args = [shell, "-ic", safeCmd];
-      break;
-
-    case "xterm":
-      args = ["-e", `${shell}`, "-ic", safeCmd];
-      break;
-
-    default:
-      args = ["-e", `${shell}`, "-ic", safeCmd];
-      break;
-  }
+  const terminalArgs =
+    {
+      konsole: ["-e", shell, "-ic", safeCmd],
+      "gnome-terminal": ["--", shell, "-ic", safeCmd],
+      tilix: ["-e", shell, "-ic", safeCmd],
+      alacritty: ["-e", shell, "-ic", safeCmd],
+      kitty: [shell, "-ic", safeCmd],
+      xterm: ["-e", shell, "-ic", safeCmd],
+    }[terminal] || ["-e", shell, "-ic", safeCmd];
 
   console.log(`▶️ Opening ${terminal} → ${entryPath}`);
   console.log(`💬 Command: ${fullCommand}\n`);
 
-  const proc = spawn(terminal, args, {
+  const proc = spawn(terminal, terminalArgs, {
     cwd: entryPath,
     stdio: "ignore",
     detached: true,
