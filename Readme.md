@@ -222,13 +222,38 @@ spawnflow/
 
 Supported Editors
 
-| Editor | Command  |
-| ------ | -------- |
-| VSCode | `code`   |
-| Cursor | `cursor` |
-| Vim    | `vim`    |
-| Neovim | `nvim`   |
-| None   | —        |
+| Editor    | Command      |
+| --------- | ------------ |
+| VSCode    | `code`       |
+| Cursor    | `cursor`     |
+| Vim       | `vim`        |
+| Neovim    | `nvim`       |
+| Sublime   | `subl`       |
+| Atom      | `atom`       |
+| Emacs     | `emacs`      |
+| WebStorm  | `webstorm`   |
+| PyCharm   | `pycharm`    |
+| IntelliJ  | `idea`       |
+| Eclipse   | `eclipse`    |
+| Nano      | `nano`       |
+| Gedit     | `gedit`      |
+| Kate      | `kate`       |
+| None      | —            |
+
+Supported Browsers
+
+| Browser    | Command                |
+| ---------- | ---------------------- |
+| Chrome     | `google-chrome-stable` |
+| Firefox    | `firefox`              |
+| Brave      | `brave`                |
+| Edge       | `microsoft-edge`       |
+| Safari     | `safari`               |
+| Opera      | `opera`                |
+| Vivaldi    | `vivaldi`              |
+| Chromium   | `chromium`             |
+| Waterfox   | `waterfox`             |
+| LibreWolf  | `librewolf`            |
 
 
 Supported Terminals
