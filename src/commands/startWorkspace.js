@@ -67,11 +67,22 @@ export async function startWorkspace(workspaceName) {
 // 📝 Open folder in chosen editor
 async function openInEditor(entryPath, editor) {
   const editorMap = {
-    vscode: "code",
-    cursor: "cursor",
-    vim: "vim",
-    neovim: "nvim",
-  };
+  vscode: "code",
+  cursor: "cursor",
+  vim: "vim",
+  neovim: "nvim",
+  sublime: "subl",
+  atom: "atom",
+  emacs: "emacs",
+  webstorm: "webstorm",
+  pycharm: "pycharm",
+  intellij: "idea",
+  eclipse: "eclipse",
+  nano: "nano",
+  gedit: "gedit",
+  kate: "kate",
+  none: null,
+};
 
   const appName = editorMap[editor];
   if (!appName) return;

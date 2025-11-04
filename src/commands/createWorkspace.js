@@ -53,14 +53,7 @@ export async function createWorkspace(workspaceName) {
         message: "Choose your editor:",
         choices: ["vscode", "cursor", "vim", "neovim", "none"],
         default: "vscode",
-      },
-      {
-        type: "list",
-        name: "browser",
-        message: "Choose your browser:",
-        choices: ["chrome", "firefox", "brave"],
-        default: "chrome",
-      },
+      }
     ]);
 
     // 6️⃣ Collect entries
@@ -116,7 +109,7 @@ export async function createWorkspace(workspaceName) {
         {
           type: "input",
           name: "name",
-          message: "Enter app's cmd \n(e.g., chrome's cmd: google-chrome-stable , obsidian's cmd: obsidian):"
+          message: "Enter app's cmd or path \n(e.g., chrome's cmd: google-chrome-stable , obsidian's path: /home/user/obsidian):"
         },
         {
           type: "input",
@@ -141,7 +134,6 @@ export async function createWorkspace(workspaceName) {
     const finalConfig = {
       name: baseAnswers.name,
       editor: baseAnswers.editor,
-      browser: baseAnswers.browser,
       entries,
       apps
     };
