@@ -61,7 +61,7 @@ spawnflow create <workspace-name>
 
 You’ll be prompted to enter:
 
-Workspace name, editor, and browser
+Workspace name and editor
 
 Paths for your projects
 
@@ -76,7 +76,6 @@ $ spawnflow create DevsCorner
 
 🚀 Creating new workspace: DevsCorner
 ✔ Choose your editor: vscode
-✔ Choose your browser: chrome
 ✔ Path: /home/dark/Desktop/DevsCorner/frontend
 ✔ Open in editor? Yes
 ✔ Commands: npm run dev
@@ -107,8 +106,8 @@ Example Output:
 
 ```bash
 📂 Available Workspaces:
-- DevsCorner (editor: vscode, browser: chrome)
-- Portfolio (editor: cursor, browser: brave)
+- DevsCorner (editor: vscode, Apps: chrome)
+- Portfolio (editor: cursor, Apps: none)
 ```
 ___________________________________________________________________________________________
 
@@ -124,7 +123,7 @@ Open all configured paths in your chosen editor
 
 Launch each project’s commands in independent terminals
 
-Open configured apps or URLs (e.g., Chrome → localhost)
+Open configured apps with path or URLs (e.g., Chrome → localhost, obsidian → notes)
 
 Example:
 
@@ -172,7 +171,6 @@ Example config.json
 {
   "name": "DevsCorner",
   "editor": "vscode",
-  "browser": "chrome",
   "entries": [
     {
       "path": "/home/dark/Desktop/DevsCorner/frontend",

@@ -32,7 +32,7 @@ export function listWorkspaces() {
     if (fs.existsSync(configPath)) {
       try {
         const config = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-        console.log(`- ${name} (editor: ${config.editor}, browser: ${config.browser})`);
+        console.log(`- ${name} (editor: ${config.editor}, apps: ${config.apps.map(app => app.name).join(", ") || "none"})`);
       } catch {
         console.log(`- ${name} (⚠️ invalid config.json)`);
       }
