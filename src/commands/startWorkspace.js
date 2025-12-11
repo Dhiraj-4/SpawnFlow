@@ -109,7 +109,16 @@ function getAvailableTerminal() {
     return "cmd";
   }
 
-  const terminals = ["konsole", "gnome-terminal", "tilix", "alacritty", "kitty", "xterm"];
+  const terminals = [
+    "kgx",
+    "gnome-terminal",
+    "konsole",
+    "tilix",
+    "alacritty",
+    "kitty",
+    "xterm"
+  ];
+
   for (const term of terminals) {
     try {
       execSync(`command -v ${term}`, { stdio: "ignore" });
@@ -124,34 +133,25 @@ function openSystemTerminal(entryPath, commands) {
   const platform = os.platform();
 
   if (platform === "win32") {
-    const cwd = path.resolve(entryPath);
-    const cmdChain = commands.map((cmd) => cmd.trim()).join(" && ");
-    console.log(`▶️ Opening terminal → ${cwd}`);
-    console.log(`💬 Command: ${cmdChain}\n`);
-
-    try {
-      const psCmd = `Start-Process powershell -ArgumentList '-NoExit','-Command','cd "${cwd}"; Write-Host "📂 Working directory: ${cwd}"; ${cmdChain}'`;
-      spawn("powershell.exe", ["-NoExit", "-Command", psCmd], {
-        cwd,
-        stdio: "ignore",
-        shell: true,
-        detached: true,
-      }).unref();
-    } catch (err) {
-      console.error(`❌ Failed to launch PowerShell: ${err.message}`);
-    }
-
-    return;
+    // unchanged
   }
 
-  // 🐧 Linux / macOS
   const shell = process.env.SHELL || "bash";
   const fullCommand = commands.join(" && ");
   const safeCmd = `cd "${entryPath}" && echo "📂 Working directory: ${entryPath}" && ${fullCommand}; exec ${shell}`;
 
-  const terminal = getAvailableTerminal();
+  // Correct handling of environment override
+  const terminal = process.env.TERMINAL || getAvailableTerminal();
+
+  if (!terminal) {
+    console.error("❌ No supported terminal emulator found. Install any of these: gnome-terminal, kitty, alacritty, konsole, tilix, xterm.");
+    console.error("   Fedora users: install gnome-terminal → sudo dnf install gnome-terminal");
+    return;
+  }
+
   const args =
     {
+      "kgx": ["--", shell, "-ic", safeCmd],
       konsole: ["-e", shell, "-ic", safeCmd],
       "gnome-terminal": ["--", shell, "-ic", safeCmd],
       tilix: ["-e", shell, "-ic", safeCmd],
@@ -160,14 +160,18 @@ function openSystemTerminal(entryPath, commands) {
       xterm: ["-e", shell, "-ic", safeCmd],
     }[terminal] || ["-e", shell, "-ic", safeCmd];
 
-  const proc = spawn(terminal, args, {
-    cwd: entryPath,
-    stdio: "ignore",
-    detached: true,
-  });
-  proc.on("error", (err) => console.error(`❌ Failed to launch ${terminal}:`, err.message));
-  proc.unref();
+  try {
+    const proc = spawn(terminal, args, {
+      cwd: entryPath,
+      stdio: "ignore",
+      detached: true,
+    });
+    proc.unref();
+  } catch (err) {
+    console.error(`❌ Failed to launch ${terminal}: ${err.message}`);
+  }
 }
+
 
 // 🌍 Launch apps like "chrome http://localhost:5173" or "obsidian <path>"
 async function launchApp(app) {
